@@ -1,0 +1,25 @@
+name: 为Xiaomi Mi 8构建
+
+on: workflow_dispatch
+
+jobs:
+  build-dipper:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build.yml
+    with:
+      kernel_repository: LineageOS/android_kernel_xiaomi_sdm845
+      kernel_repository_branch: lineage-22.2
+      kernel_version: 4.9
+      kernel_localversion: -g888888888888
+      device_code: dipper
+      device_name: Xiaomi Mi 8
+      device_defconfig: dipper-LineageOS-android_kernel_xiaomi_sdm845_defconfig
+      custom_defconfig: true
+      use_kprobes: false
+      aosp_clang_branch: android11-release
+      aosp_clang_version: r365631c
+      aosp_gcc: false
+      kernel_patches: |
+        KernelSU-HookSelinux.patch
+        Rekernel-4.9.patch
