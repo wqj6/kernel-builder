@@ -201,7 +201,5 @@ jobs:
             分支: ${{ inputs.kernel_repository_branch }}
           files: |
             ${{ matrix.variant.name }}-Anykernel3.zip
-            kernel/${{ matrix.variant.name }}-Image.gz-dtb
-            kernel/${{ matrix.variant.name }}-Image.gz
-            kernel/${{ matrix.variant.name }}-Image
+            kernel/${{ matrix.variant.name }}-Image*
             KernelSU_Next_*-release.apk     
