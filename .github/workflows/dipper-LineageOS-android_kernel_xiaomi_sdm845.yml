@@ -22,4 +22,3 @@ jobs:
       aosp_gcc: false
       kernel_patches: |
         KernelSU-HookSelinux.patch
-        Rekernel-4.9.patch
