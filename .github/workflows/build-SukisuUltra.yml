@@ -29,12 +29,13 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        - name: SukisuUltra
-          ksu_branch: main
-          susfs: false
-        - name: SukisuUltraSusfs
-          ksu_branch: susfs-stable
-          susfs: true
+        variant:
+          - name: SukisuUltra
+            ksu_branch: main
+            susfs: false
+          - name: SukisuUltraSusfs
+            ksu_branch: susfs-stable
+            susfs: true
 
     steps:
       - name: 同步仓库
@@ -82,7 +83,7 @@ jobs:
           rm -rf .git .github LICENSE README.md
           cat >anykernel.sh <<EOF
           properties() { ' 
-          kernel.string=${{ inputs.kernel_repository }} remote ${{ inputs.kernel_repository_branch }} with ${{ matrix.name }} for ${{ inputs.device_code }}
+          kernel.string=${{ inputs.kernel_repository }} remote ${{ inputs.kernel_repository_branch }} with ${{ matrix.variant.name }} for ${{ inputs.device_code }}
           do.devicecheck=1
           device.name1=${{ inputs.device_code }}
           '; }
@@ -101,7 +102,7 @@ jobs:
         working-directory: kernel
         run: |
           # 应用KernelSU
-          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ env.matrix.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.ksu_branch }}
+          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ env.matrix.variant.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
           
           # 配置kprobe
           if ${{ inputs.use_kprobes }}; then
@@ -116,7 +117,7 @@ jobs:
           patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/KernelSU-Safemode-event.patch
 
           # 应用susfs补丁
-          if ${{ matrix.susfs }}; then
+          if ${{ matrix.variant.susfs }}; then
             patch -s -p1 -i $GITHUB_WORKSPACE/susfs/kernel_patches/50_add_susfs_in_kernel-${{ inputs.kernel_version }}.patch \
             || patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/susfs-fix-${{ inputs.kernel_version }}.patch
             cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/
@@ -161,11 +162,11 @@ jobs:
           # 打包Anykernel3
           (cp out/arch/arm64/boot/Image.gz-dtb $GITHUB_WORKSPACE/Ak3 && \
           cd $GITHUB_WORKSPACE/Ak3 && \
-          zip -q -r $GITHUB_WORKSPACE/${{ matrix.name }}-Anykernel3.zip *)
+          zip -q -r $GITHUB_WORKSPACE/${{ matrix.variant.name }}-Anykernel3.zip *)
 
-          cp out/arch/arm64/boot/Image.gz-dtb ${{ matrix.name }}-Image.gz-dtb
-          cp out/arch/arm64/boot/Image.gz ${{ matrix.name }}-Image.gz
-          cp out/arch/arm64/boot/Image ${{ matrix.name }}-Image
+          cp out/arch/arm64/boot/Image.gz-dtb ${{ matrix.variant.name }}-Image.gz-dtb
+          cp out/arch/arm64/boot/Image.gz ${{ matrix.variant.name }}-Image.gz
+          cp out/arch/arm64/boot/Image ${{ matrix.variant.name }}-Image
 
       - uses: robinraju/release-downloader@v1
         with:
@@ -183,6 +184,6 @@ jobs:
             内核: ${{ inputs.kernel_repository }}
             分支: ${{ inputs.kernel_repository_branch }}
           files: |
-            ${{ matrix.name }}-Anykernel3.zip
-            kernel/${{ matrix.name }}-Image*
+            ${{ matrix.variant.name }}-Anykernel3.zip
+            kernel/${{ matrix.variant.name }}-Image*
             *.apk     
