@@ -1,0 +1,179 @@
+name: 构建内核
+
+on:
+  workflow_call:
+    inputs:
+      kernel_repository: {required: true, type: string}
+      kernel_repository_branch: {required: true, type: string}
+      kernel_version: {required: true, type: string}
+      kernel_localversion: {required: true, type: string}
+      device_code: {required: true, type: string}
+      device_name: {required: true, type: string}
+      device_defconfig: {required: true, type: string}
+      custom_defconfig: {required: false, type: boolean}
+      use_kprobes: {required: true, type: boolean}
+      aosp_clang_branch: {required: true, type: string}
+      aosp_clang_version: {required: true, type: string}
+      aosp_gcc: {required: true, type: boolean}
+      kernel_patches: {required: false, type: string}
+
+env:
+  ksu_repo: rifsxd/KernelSU-Next   
+
+jobs:
+  build:
+    name: 构建内核
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    continue-on-error: true
+    strategy:
+      matrix:
+        variant: 
+          - name: KernelsuNext
+            ksu_branch: next
+            susfs: false
+          - name: KernelsuNextSusfs
+            ksu_branch: next-susfs
+            susfs: true
+
+    steps:
+      - name: 同步仓库
+        uses: actions/checkout@v4
+        with:
+          path: self-repo
+
+      - name: 安装软件包
+        run: sudo apt update && sudo apt install -y binutils-arm-linux-gnueabi binutils-aarch64-linux-gnu
+      
+      - name: 克隆仓库
+        run: |
+          clone_jobs=(
+            "https://github.com/osm0sis/AnyKernel3.git,Ak3,master"
+            "https://gitlab.com/simonpunk/susfs4ksu.git,susfs,kernel-${{ inputs.kernel_version }}"
+            "https://github.com/${{ inputs.kernel_repository }}.git,kernel,${{ inputs.kernel_repository_branch }}"
+          )
+
+          for job in "${clone_jobs[@]}"; do
+            IFS=',' read repo path branch <<< "$job"
+            git clone -q "$repo" --depth=1 -b "$branch" "$path"
+          done
+
+      - name: 下载clang
+        run: |
+          mkdir -p aosp-clang
+          curl -LSs https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/${{ inputs.aosp_clang_branch }}/clang-${{ inputs.aosp_clang_version }}.tar.gz | tar xz -C aosp-clang
+          echo PATH=$GITHUB_WORKSPACE/aosp-clang/bin:$PATH >> $GITHUB_ENV
+      
+      - name: 下载gcc
+        if: ${{ inputs.aosp_gcc }}
+        run: |
+          mkdir -p aosp-gcc-aarch64 aosp-gcc-arm
+          curl -LSs https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/heads/android12-release.tar.gz | tar xz -C aosp-gcc-aarch64
+          curl -LSs https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/heads/android12-release.tar.gz | tar xz -C aosp-gcc-arm
+          echo PATH=$GITHUB_WORKSPACE/aosp-gcc-aarch64/bin:$GITHUB_WORKSPACE/aosp-gcc-arm/bin:$PATH >> $GITHUB_ENV
+          
+      - name: 复制defconfig
+        if: ${{ inputs.custom_defconfig }}
+        run: cp self-repo/custom_defconfig/${{ inputs.device_defconfig }} kernel/arch/arm64/configs/${{ inputs.device_defconfig }}
+          
+      - name: 配置Anykernel3
+        working-directory: Ak3
+        run: |
+          rm -rf .git .github LICENSE README.md
+          cat >anykernel.sh <<EOF
+          properties() { ' 
+          kernel.string=${{ inputs.kernel_repository }} remote ${{ inputs.kernel_repository_branch }} with ${{ matrix.name }} for ${{ inputs.device_code }}
+          do.devicecheck=1
+          device.name1=${{ inputs.device_code }}
+          '; }
+          
+          block=auto
+          is_slot_device=auto
+          ramdisk_compression=auto
+          patch_vbmeta_flag=auto
+          
+          . tools/ak3-core.sh
+          split_boot
+          flash_boot
+          EOF
+
+      - name: 设置KernelSU
+        working-directory: kernel
+        run: |
+          # 应用KernelSU
+          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ matrix.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.ksu_branch }}
+          
+          # 配置kprobe
+          if ${{ inputs.use_kprobes }}; then
+            echo CONFIG_KPROBES=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+            echo CONFIG_HAVE_KPROBES=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+            echo CONFIG_KPROBE_EVENTS=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          else
+            patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/KernelSU-NoKprobe-${{ inputs.kernel_version }}.patch
+            echo CONFIG_KPROBES=n >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          fi
+          patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/KernelSU-Umount.patch
+          patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/KernelSU-Safemode-event.patch
+
+          # 应用susfs补丁
+          if ${{ matrix.susfs }}; then
+            patch -s -p1 -i $GITHUB_WORKSPACE/susfs/kernel_patches/50_add_susfs_in_kernel-${{ inputs.kernel_version }}.patch \
+            || patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/susfs-fix-${{ inputs.kernel_version }}.patch
+            cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/
+            cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/
+            echo CONFIG_KSU_SUSFS_SUS_SU=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          fi
+
+      - name: 构建内核
+        working-directory: kernel
+        run: |
+          # 应用自定义补丁
+          while IFS= read -r patch; do
+            [[ -z "$patch" || "$patch" == "#"* ]] && continue
+            patch -s -p1 -i "$GITHUB_WORKSPACE/self-repo/patches/$patch"
+          done <<< "${{ inputs.kernel_patches }}"
+
+          # 编译
+          MAKE_ARGS="-s \
+          CFLAGS=-w \
+          O=out \
+          ARCH=arm64 \
+          ${{ inputs.aosp_gcc == true && 'CLANG_TRIPLE=aarch64-linux-gnu-' || '' }} \
+          ${{ inputs.aosp_gcc == false && 'LLVM=1 LLVM_IAS=1' || 'CC=clang' }} \
+          CROSS_COMPILE=aarch64-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}- \
+          CROSS_COMPILE_ARM32=arm-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}eabi- \
+          -j$(nproc --all) "
+
+          echo "CONFIG_LOCALVERSION_AUTO=n" >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          make $MAKE_ARGS ${{ inputs.device_defconfig }}
+          make $MAKE_ARGS LOCALVERSION=${{ inputs.kernel_localversion }}
+
+          # 打包Anykernel3
+          (cp out/arch/arm64/boot/Image.gz-dtb $GITHUB_WORKSPACE/Ak3 && 
+           cd $GITHUB_WORKSPACE/Ak3 &&
+           zip -q -r $GITHUB_WORKSPACE/${{ matrix.name }}-Anykernel3.zip *)
+
+          cp out/arch/arm64/boot/Image.gz-dtb ${{ matrix.name }}-Image.gz-dtb
+          cp out/arch/arm64/boot/Image.gz ${{ matrix.name }}-Image.gz
+          cp out/arch/arm64/boot/Image ${{ matrix.name }}-Image
+
+      - uses: robinraju/release-downloader@v1
+        with:
+          repository: ${{ env.ksu_repo }}
+          latest: true
+          fileName: '*.apk'
+          
+
+      - name: 发布版本
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.device_code }}-${{ inputs.kernel_repository }}
+          body: |
+            设备: ${{ inputs.device_name }}
+            内核: ${{ inputs.kernel_repository }}
+            分支: ${{ inputs.kernel_repository_branch }}
+          files: |
+            ${{ matrix.name }}-Anykernel3.zip
+            kernel/${{ matrix.name }}-Image*
+            *.apk     

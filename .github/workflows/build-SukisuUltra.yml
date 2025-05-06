@@ -1,48 +1,24 @@
 name: 构建内核
 
-on: 
+on:
   workflow_call:
     inputs:
-      kernel_repository: 
-        required: true
-        type: string
-      kernel_repository_branch: 
-        required: true
-        type: string
-      kernel_version: 
-        required: true
-        type: string
-      kernel_localversion:
-        required: true
-        type: string
-      device_code:
-        required: true
-        type: string
-      device_name:
-        required: true
-        type: string
-      device_defconfig:
-        required: true
-        type: string
-      custom_defconfig: 
-        required: false
-        type: boolean
-      use_kprobes: 
-        required: true
-        type: boolean
-      aosp_clang_branch: 
-        required: true
-        type: string
-      aosp_clang_version: 
-        required: true
-        type: string
-      aosp_gcc: 
-        required: true
-        type: boolean
-      kernel_patches: 
-        required: false
-        type: string
-      
+      kernel_repository: {required: true, type: string}
+      kernel_repository_branch: {required: true, type: string}
+      kernel_version: {required: true, type: string}
+      kernel_localversion: {required: true, type: string}
+      device_code: {required: true, type: string}
+      device_name: {required: true, type: string}
+      device_defconfig: {required: true, type: string}
+      custom_defconfig: {required: false, type: boolean}
+      use_kprobes: {required: true, type: boolean}
+      aosp_clang_branch: {required: true, type: string}
+      aosp_clang_version: {required: true, type: string}
+      aosp_gcc: {required: true, type: boolean}
+      kernel_patches: {required: false, type: string}
+
+env:
+  ksu_repo: ShirkNeko/SukiSU-Ultra
 
 jobs:
   build:
@@ -53,15 +29,12 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        variant: 
-          - name: KernelsuNext
-            repo: rifsxd/KernelSU-Next/next
-            ksu_branch: ''
-            susfs: false
-          - name: KernelsuNextSusfs
-            repo: rifsxd/KernelSU-Next/next
-            ksu_branch: next-susfs
-            susfs: true
+        - name: SukisuUltra
+          ksu_branch: main
+          susfs: false
+        - name: SukisuUltraSusfs
+          ksu_branch: susfs-stable
+          susfs: true
 
     steps:
       - name: 同步仓库
@@ -109,7 +82,7 @@ jobs:
           rm -rf .git .github LICENSE README.md
           cat >anykernel.sh <<EOF
           properties() { ' 
-          kernel.string=${{ inputs.kernel_repository }} remote ${{ inputs.kernel_repository_branch }} with ${{ matrix.variant.name }} for ${{ inputs.device_code }}
+          kernel.string=${{ inputs.kernel_repository }} remote ${{ inputs.kernel_repository_branch }} with ${{ matrix.name }} for ${{ inputs.device_code }}
           do.devicecheck=1
           device.name1=${{ inputs.device_code }}
           '; }
@@ -128,7 +101,7 @@ jobs:
         working-directory: kernel
         run: |
           # 应用KernelSU
-          curl -LSs https://raw.githubusercontent.com/${{ matrix.variant.repo }}/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
+          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ env.matrix.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.ksu_branch }}
           
           # 配置kprobe
           if ${{ inputs.use_kprobes }}; then
@@ -143,13 +116,19 @@ jobs:
           patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/KernelSU-Safemode-event.patch
 
           # 应用susfs补丁
-          if ${{ matrix.variant.susfs }}; then
+          if ${{ matrix.susfs }}; then
             patch -s -p1 -i $GITHUB_WORKSPACE/susfs/kernel_patches/50_add_susfs_in_kernel-${{ inputs.kernel_version }}.patch \
-            || patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/enable-susfs-kernel-${{ inputs.kernel_version }}-fix.patch
+            || patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/susfs-fix-${{ inputs.kernel_version }}.patch
             cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/
             cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/
             echo CONFIG_KSU_SUSFS_SUS_SU=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
           fi
+          
+          # KPM支持
+          echo CONFIG_KPM=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          echo CONFIG_KALLSYMS=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          echo CONFIG_KALLSYMS_ALL=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          [ -f include/linux/set_memory.h ] || find KernelSU/kernel/ -type f -exec sed -i 's|#include <linux/set_memory.h>||g' {} +
 
       - name: 构建内核
         working-directory: kernel
@@ -174,21 +153,25 @@ jobs:
           echo "CONFIG_LOCALVERSION_AUTO=n" >> arch/arm64/configs/${{ inputs.device_defconfig }}
           make $MAKE_ARGS ${{ inputs.device_defconfig }}
           make $MAKE_ARGS LOCALVERSION=${{ inputs.kernel_localversion }}
+          
+          (cd out/arch/arm64/boot && rm Image.gz Image.gz-dtb && \
+          curl -LSs https://github.com/ShirkNeko/SukiSU_KernelPatch_patch/releases/download/0.11-beta/patch_linux -o patch && \
+          chmod 777 patch && ./patch && mv oImage Image && gzip -k Image && cat Image.gz dts/*/*.dtb > Image.gz-dtb)
 
           # 打包Anykernel3
-          (cp out/arch/arm64/boot/Image.gz-dtb $GITHUB_WORKSPACE/Ak3 && 
-           cd $GITHUB_WORKSPACE/Ak3 &&
-           zip -q -r $GITHUB_WORKSPACE/${{ matrix.variant.name }}-Anykernel3.zip *)
+          (cp out/arch/arm64/boot/Image.gz-dtb $GITHUB_WORKSPACE/Ak3 && \
+          cd $GITHUB_WORKSPACE/Ak3 && \
+          zip -q -r $GITHUB_WORKSPACE/${{ matrix.name }}-Anykernel3.zip *)
 
-          cp out/arch/arm64/boot/Image.gz-dtb ${{ matrix.variant.name }}-Image.gz-dtb
-          cp out/arch/arm64/boot/Image.gz ${{ matrix.variant.name }}-Image.gz
-          cp out/arch/arm64/boot/Image ${{ matrix.variant.name }}-Image
+          cp out/arch/arm64/boot/Image.gz-dtb ${{ matrix.name }}-Image.gz-dtb
+          cp out/arch/arm64/boot/Image.gz ${{ matrix.name }}-Image.gz
+          cp out/arch/arm64/boot/Image ${{ matrix.name }}-Image
 
       - uses: robinraju/release-downloader@v1
         with:
-          repository: KernelSU-Next/KernelSU-Next
+          repository: ${{ env.ksu_repo }}
           latest: true
-          fileName: 'KernelSU_Next_*-release.apk'
+          fileName: '*.apk'
           
 
       - name: 发布版本
@@ -200,6 +183,6 @@ jobs:
             内核: ${{ inputs.kernel_repository }}
             分支: ${{ inputs.kernel_repository_branch }}
           files: |
-            ${{ matrix.variant.name }}-Anykernel3.zip
-            kernel/${{ matrix.variant.name }}-Image*
-            KernelSU_Next_*-release.apk     
+            ${{ matrix.name }}-Anykernel3.zip
+            kernel/${{ matrix.name }}-Image*
+            *.apk     

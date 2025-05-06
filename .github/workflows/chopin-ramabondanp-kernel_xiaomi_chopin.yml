@@ -2,20 +2,27 @@ name: 为Redmi Note 10 Pro构建
 
 on: workflow_dispatch
 
+x-config: &common-config
+  permissions:
+    contents: write
+  with:
+    kernel_repository: ramabondanp/kernel_xiaomi_chopin
+    kernel_repository_branch: gpu
+    kernel_version: 4.14
+    kernel_localversion: -g888888888888
+    device_code: chopin
+    device_name: Redmi Note 10 Pro
+    device_defconfig: chopin_user_defconfig
+    use_kprobes: false
+    aosp_clang_branch: android11-release
+    aosp_clang_version: r377782d
+    aosp_gcc: true
+
 jobs:
-  build-chopin:
-    permissions:
-      contents: write
-    uses: ./.github/workflows/build.yml
-    with:
-      kernel_repository: ramabondanp/kernel_xiaomi_chopin
-      kernel_repository_branch: gpu
-      kernel_version: 4.14
-      kernel_localversion: -g888888888888
-      device_code: chopin
-      device_name: Redmi Note 10 Pro
-      device_defconfig: chopin_user_defconfig
-      use_kprobes: false
-      aosp_clang_branch: android11-release
-      aosp_clang_version: r377782d
-      aosp_gcc: true
+  build-KernelsuNext:
+    <<: *common-config
+    uses: ./.github/workflows/build-KernelsuNext.yml
+
+  build-SukisuUltra:
+    <<: *common-config
+    uses: ./.github/workflows/build-SukisuUltra.yml
