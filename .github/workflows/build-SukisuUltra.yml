@@ -102,7 +102,7 @@ jobs:
         working-directory: kernel
         run: |
           # 应用KernelSU
-          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ env.matrix.variant.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
+          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ matrix.variant.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
           
           # 配置kprobe
           if ${{ inputs.use_kprobes }}; then
