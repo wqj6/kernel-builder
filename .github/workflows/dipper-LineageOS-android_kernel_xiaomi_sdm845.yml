@@ -1,6 +1,6 @@
 name: 为Xiaomi Mi 8构建
 
-on: workflow_dispatch
+on: [ workflow_dispatch, push ]
 
 x-config: &common-config
   permissions:
