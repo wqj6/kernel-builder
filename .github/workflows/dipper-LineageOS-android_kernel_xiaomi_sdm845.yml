@@ -4,8 +4,7 @@ on: workflow_dispatch
 
 jobs:
   build-KernelsuNext:
-    permissions:
-      contents: write
+    permissions: { contents: write }
     uses: ./.github/workflows/build-KernelsuNext.yml
     with:
       kernel_repository: LineageOS/android_kernel_xiaomi_sdm845
@@ -24,8 +23,7 @@ jobs:
         KernelSU-HookSelinux.patch
         
   build-SukisuUltra:
-    permissions:
-      contents: write
+    permissions: { contents: write }
     uses: ./.github/workflows/build-SukisuUltra.yml
     with:
       kernel_repository: LineageOS/android_kernel_xiaomi_sdm845

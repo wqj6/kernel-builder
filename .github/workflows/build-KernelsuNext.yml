@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: 同步仓库
         uses: actions/checkout@v4
-        with: path: self-repo
+        with: { path: self-repo }
 
       - name: 安装软件包
         run: sudo apt update && sudo apt install -y binutils-arm-linux-gnueabi binutils-aarch64-linux-gnu
@@ -143,11 +143,7 @@ jobs:
            zip -q -r $GITHUB_WORKSPACE/${{ matrix.variant.name }}-Anykernel3.zip *)
 
       - uses: robinraju/release-downloader@v1
-        with:
-          repository: ${{ env.ksu_repo }}
-          latest: true
-          fileName: '*.apk'
-          
+        with: { repository: ${{ env.ksu_repo }}, latest: true, fileName: '*.apk' }
 
       - name: 发布版本
         uses: softprops/action-gh-release@v2

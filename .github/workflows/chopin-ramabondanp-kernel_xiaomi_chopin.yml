@@ -4,8 +4,7 @@ on: workflow_dispatch
 
 jobs:
   build-KernelsuNext:
-    permissions:
-      contents: write
+    permissions: { contents: write }
     uses: ./.github/workflows/build-KernelsuNext.yml
     with:
       kernel_repository: ramabondanp/kernel_xiaomi_chopin
@@ -20,8 +19,7 @@ jobs:
       aosp_clang_version: r377782d
       aosp_gcc: true
   build-SukisuUltra:
-    permissions:
-      contents: write
+    permissions: { contents: write }
     uses: ./.github/workflows/build-SukisuUltra.yml
     with:
       kernel_repository: ramabondanp/kernel_xiaomi_chopin
