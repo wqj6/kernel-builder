@@ -34,7 +34,7 @@ jobs:
             ksu_branch: main
             susfs: false
           - name: SukisuUltraSusfs
-            ksu_branch: susfs-stable
+            ksu_branch: susfs-dev
             susfs: true
 
     steps:
