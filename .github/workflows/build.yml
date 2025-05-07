@@ -49,7 +49,7 @@ jobs:
       aosp_clang_version: ${{ inputs.aosp_clang_version }}
       aosp_gcc: ${{ inputs.aosp_gcc }}
       kernel_patches: "${{ inputs.kernel_patches }}"
-  build-SukisuUltra:
+  build-RsuntkKernelsu:
     permissions: { contents: write }
     uses: ./.github/workflows/build-RsuntkKernelsu.yml
     with:
