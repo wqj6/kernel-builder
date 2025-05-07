@@ -18,7 +18,7 @@ on:
       kernel_patches: { required: false, type: string }
 
 env:
-  ksu_repo: rifsxd/KernelSU-Next
+  ksu_repo: tiann/KernelSU
 
 jobs:
   build:
@@ -29,8 +29,8 @@ jobs:
     strategy:
       matrix:
         variant: 
-          - { name: KernelsuNext, ksu_branch: next, susfs: false }
-          - { name: KernelsuNextSusfs, ksu_branch: next-susfs, susfs: true }
+          - { name: RsuntkKernelsu, ksu_branch: main, susfs: false }
+          - { name: RsuntkKernelsuSusfs, ksu_branch: susfs-v1.5.5, susfs: true }
     steps:
       - name: 同步仓库
         uses: actions/checkout@v4

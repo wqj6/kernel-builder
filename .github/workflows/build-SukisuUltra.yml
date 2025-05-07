@@ -136,8 +136,7 @@ jobs:
 
           # 编译
           MAKE_ARGS="-s O=out ARCH=arm64 -j$(nproc --all) \
-          ${{ inputs.aosp_gcc == true && 'CLANG_TRIPLE=aarch64-linux-gnu-' || '' }} \
-          ${{ inputs.aosp_gcc == false && 'LLVM=1 LLVM_IAS=1' || 'CC=clang' }} \
+          ${{ inputs.aosp_gcc == true && 'CC=clang CLANG_TRIPLE=aarch64-linux-gnu-' || 'LLVM=1 LLVM_IAS=1' }} \
           CROSS_COMPILE=aarch64-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}- \
           CROSS_COMPILE_ARM32=arm-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}eabi-"
           echo CONFIG_LOCALVERSION_AUTO=n >> arch/arm64/configs/${{ inputs.device_defconfig }}
