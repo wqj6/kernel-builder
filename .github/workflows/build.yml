@@ -28,6 +28,7 @@ jobs:
       device_code: ${{ inputs.device_code }}
       device_name: ${{ inputs.device_name }}
       device_defconfig: ${{ inputs.device_defconfig }}
+      custom_defconfig: ${{ inputs.custom_defconfig }}
       use_kprobes: ${{ inputs.use_kprobes }}
       aosp_clang_branch: ${{ inputs.aosp_clang_branch }}
       aosp_clang_version: ${{ inputs.aosp_clang_version }}
@@ -44,6 +45,7 @@ jobs:
       device_code: ${{ inputs.device_code }}
       device_name: ${{ inputs.device_name }}
       device_defconfig: ${{ inputs.device_defconfig }}
+      custom_defconfig: ${{ inputs.custom_defconfig }}
       use_kprobes: ${{ inputs.use_kprobes }}
       aosp_clang_branch: ${{ inputs.aosp_clang_branch }}
       aosp_clang_version: ${{ inputs.aosp_clang_version }}
@@ -60,6 +62,7 @@ jobs:
       device_code: ${{ inputs.device_code }}
       device_name: ${{ inputs.device_name }}
       device_defconfig: ${{ inputs.device_defconfig }}
+      custom_defconfig: ${{ inputs.custom_defconfig }}
       use_kprobes: ${{ inputs.use_kprobes }}
       aosp_clang_branch: ${{ inputs.aosp_clang_branch }}
       aosp_clang_version: ${{ inputs.aosp_clang_version }}
