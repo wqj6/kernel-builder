@@ -144,7 +144,10 @@ jobs:
 
       - name: 获取管理器
         uses: robinraju/release-downloader@v1
-        with: { repository: ${{ env.ksu_repo }}, latest: true, fileName: '*.apk' }
+        with: 
+          repository: ${{ env.ksu_repo }}
+          latest: true
+          fileName: '*.apk'
 
       - name: 发布版本
         uses: softprops/action-gh-release@v2
