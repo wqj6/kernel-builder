@@ -24,8 +24,7 @@ jobs:
   build:
     name: 构建内核
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    permissions: { contents: write }
     continue-on-error: true
     strategy:
       matrix:

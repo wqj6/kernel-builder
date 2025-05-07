@@ -24,11 +24,13 @@ jobs:
   build:
     name: 构建内核
     runs-on: ubuntu-latest
-    permissions: contents: write
+    permissions: { contents: write }
     continue-on-error: true
-    strategy: matrix: variant: 
-      - { name: KernelsuNext, ksu_branch: next, susfs: false }
-      - { name: KernelsuNextSusfs, ksu_branch: next-susfs, susfs: true }
+    strategy:
+      matrix:
+        variant: 
+          - { name: KernelsuNext, ksu_branch: next, susfs: false }
+          - { name: KernelsuNextSusfs, ksu_branch: next-susfs, susfs: true }
     steps:
       - name: 同步仓库
         uses: actions/checkout@v4
