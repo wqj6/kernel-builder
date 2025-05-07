@@ -1,4 +1,4 @@
-name: 构建内核
+name: SukisuUltra
 
 on:
   workflow_call:
