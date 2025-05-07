@@ -1,63 +1,66 @@
 on:
   workflow_call:
     inputs:
-      kernel_repository: { required: ${{ inputs.aosp_gcc }}, type: string }
-      kernel_repository_branch: { required: ${{ inputs.aosp_gcc }}, type: string }
-      kernel_version: { required: ${{ inputs.aosp_gcc }}, type: string }
-      kernel_localversion: { required: ${{ inputs.aosp_gcc }}, type: string }
-      device_code: { required: ${{ inputs.aosp_gcc }}, type: string }
-      device_name: { required: ${{ inputs.aosp_gcc }}, type: string }
-      device_defconfig: { required: ${{ inputs.aosp_gcc }}, type: string }
-      custom_defconfig: { required: ${{ inputs.use_kprobes }}, type: boolean }
-      use_kprobes: { required: ${{ inputs.aosp_gcc }}, type: boolean }
-      aosp_clang_branch: { required: ${{ inputs.aosp_gcc }}, type: string }
-      aosp_clang_version: { required: ${{ inputs.aosp_gcc }}, type: string }
-      aosp_gcc: { required: ${{ inputs.aosp_gcc }}, type: boolean }
-      kernel_patches: { required: ${{ inputs.use_kprobes }}, type: string }
+      kernel_repository: { required: true, type: string }
+      kernel_repository_branch: { required: true, type: string }
+      kernel_version: { required: true, type: string }
+      kernel_localversion: { required: true, type: string }
+      device_code: { required: true, type: string }
+      device_name: { required: true, type: string }
+      device_defconfig: { required: true, type: string }
+      custom_defconfig: { required: false, type: boolean }
+      use_kprobes: { required: true, type: boolean }
+      aosp_clang_branch: { required: true, type: string }
+      aosp_clang_version: { required: true, type: string }
+      aosp_gcc: { required: true, type: boolean }
+      kernel_patches: { required: false, type: string }
 
 jobs:
   build-KernelsuNext:
     permissions: { contents: write }
     uses: ./.github/workflows/build-KernelsuNext.yml
     with:
-      kernel_repository: ${{ inputs.kernel_repository }}
-      kernel_repository_branch: ${{ inputs.kernel_repository_branch }}
-      kernel_version: ${{ inputs.kernel_version }}
-      kernel_localversion: ${{ inputs.kernel_localversion }}
-      device_code: ${{ inputs.device_code }}
-      device_name: ${{ inputs.device_name }}
-      device_defconfig: ${{ inputs.device_defconfig }}
-      use_kprobes: ${{ inputs.use_kprobes }}
-      aosp_clang_branch: ${{ inputs.aosp_clang_branch }}
-      aosp_clang_version: ${{ inputs.aosp_clang_version }}
-      aosp_gcc: ${{ inputs.aosp_gcc }}
+      kernel_repository: "${{ inputs.kernel_repository }}"
+      kernel_repository_branch: "${{ inputs.kernel_repository_branch }}"
+      kernel_version: "${{ inputs.kernel_version }}"
+      kernel_localversion: "${{ inputs.kernel_localversion }}"
+      device_code: "${{ inputs.device_code }}"
+      device_name: "${{ inputs.device_name }}"
+      device_defconfig: "${{ inputs.device_defconfig }}"
+      use_kprobes: "${{ inputs.use_kprobes }}"
+      aosp_clang_branch: "${{ inputs.aosp_clang_branch }}"
+      aosp_clang_version: "${{ inputs.aosp_clang_version }}"
+      aosp_gcc: "${{ inputs.aosp_gcc }}"
+      kernel_patches: "${{ inputs.kernel_patches }}"
   build-SukisuUltra:
     permissions: { contents: write }
     uses: ./.github/workflows/build-SukisuUltra.yml
     with:
-      kernel_repository: ${{ inputs.kernel_repository }}
-      kernel_repository_branch: ${{ inputs.kernel_repository_branch }}
-      kernel_version: ${{ inputs.kernel_version }}
-      kernel_localversion: ${{ inputs.kernel_localversion }}
-      device_code: ${{ inputs.device_code }}
-      device_name: ${{ inputs.device_name }}
-      device_defconfig: ${{ inputs.device_defconfig }}
-      use_kprobes: ${{ inputs.use_kprobes }}
-      aosp_clang_branch: ${{ inputs.aosp_clang_branch }}
-      aosp_clang_version: ${{ inputs.aosp_clang_version }}
-      aosp_gcc: ${{ inputs.aosp_gcc }}
+      kernel_repository: "${{ inputs.kernel_repository }}"
+      kernel_repository_branch: "${{ inputs.kernel_repository_branch }}"
+      kernel_version: "${{ inputs.kernel_version }}"
+      kernel_localversion: "${{ inputs.kernel_localversion }}"
+      device_code: "${{ inputs.device_code }}"
+      device_name: "${{ inputs.device_name }}"
+      device_defconfig: "${{ inputs.device_defconfig }}"
+      use_kprobes: "${{ inputs.use_kprobes }}"
+      aosp_clang_branch: "${{ inputs.aosp_clang_branch }}"
+      aosp_clang_version: "${{ inputs.aosp_clang_version }}"
+      aosp_gcc: "${{ inputs.aosp_gcc }}"
+      kernel_patches: "${{ inputs.kernel_patches }}"
   build-SukisuUltra:
     permissions: { contents: write }
     uses: ./.github/workflows/build-RsuntkKernelsu.yml
     with:
-      kernel_repository: ${{ inputs.kernel_repository }}
-      kernel_repository_branch: ${{ inputs.kernel_repository_branch }}
-      kernel_version: ${{ inputs.kernel_version }}
-      kernel_localversion: ${{ inputs.kernel_localversion }}
-      device_code: ${{ inputs.device_code }}
-      device_name: ${{ inputs.device_name }}
-      device_defconfig: ${{ inputs.device_defconfig }}
-      use_kprobes: ${{ inputs.use_kprobes }}
-      aosp_clang_branch: ${{ inputs.aosp_clang_branch }}
-      aosp_clang_version: ${{ inputs.aosp_clang_version }}
-      aosp_gcc: ${{ inputs.aosp_gcc }}
+      kernel_repository: "${{ inputs.kernel_repository }}"
+      kernel_repository_branch: "${{ inputs.kernel_repository_branch }}"
+      kernel_version: "${{ inputs.kernel_version }}"
+      kernel_localversion: "${{ inputs.kernel_localversion }}"
+      device_code: "${{ inputs.device_code }}"
+      device_name: "${{ inputs.device_name }}"
+      device_defconfig: "${{ inputs.device_defconfig }}"
+      use_kprobes: "${{ inputs.use_kprobes }}"
+      aosp_clang_branch: "${{ inputs.aosp_clang_branch }}"
+      aosp_clang_version: "${{ inputs.aosp_clang_version }}"
+      aosp_gcc: "${{ inputs.aosp_gcc }}"
+      kernel_patches: "${{ inputs.kernel_patches }}"
