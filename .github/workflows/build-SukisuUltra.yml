@@ -154,7 +154,8 @@ jobs:
           cd $GITHUB_WORKSPACE/Ak3 && \
           zip -q -r $GITHUB_WORKSPACE/${{ matrix.variant.name }}-Anykernel3.zip *)
 
-      - uses: robinraju/release-downloader@v1
+      - name: 获取管理器
+        uses: robinraju/release-downloader@v1
         with: { repository: ${{ env.ksu_repo }}, latest: true, fileName: '*.apk' }
 
       - name: 发布版本
