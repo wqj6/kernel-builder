@@ -17,9 +17,6 @@ on:
       aosp_gcc: { required: true, type: boolean }
       kernel_patches: { required: false, type: string }
 
-env:
-  ksu_repo: tiann/KernelSU
-
 jobs:
   build:
     name: 构建内核
@@ -29,7 +26,7 @@ jobs:
     strategy:
       matrix:
         variant: 
-          - { name: RsuntkKernelsu, ksu_branch: main, susfs: false }
+          - { name: RsuntkKernelsu, ksu_branch: v1.0.3, susfs: false }
           - { name: RsuntkKernelsuSusfs, ksu_branch: susfs-v1.5.5, susfs: true }
     steps:
       - name: 同步仓库
@@ -95,7 +92,7 @@ jobs:
         working-directory: kernel
         run: |
           # 应用KernelSU
-          curl -LSs https://raw.githubusercontent.com/${{ env.ksu_repo }}/${{ matrix.variant.ksu_branch }}/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
+          curl -LSs https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
 
           # 配置kprobe
           if ${{ inputs.use_kprobes }}; then
@@ -144,7 +141,7 @@ jobs:
       - name: 获取管理器
         uses: robinraju/release-downloader@v1
         with: 
-          repository: ${{ env.ksu_repo }}
+          repository: tiann/KernelSU
           latest: true
           fileName: '*.apk'
 

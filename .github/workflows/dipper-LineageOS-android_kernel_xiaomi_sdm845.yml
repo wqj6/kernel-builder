@@ -3,7 +3,7 @@ name: 为Xiaomi Mi 8构建
 on: workflow_dispatch
 
 jobs:
-  build-KernelsuNext:
+  build:
     permissions: { contents: write }
     uses: ./.github/workflows/build.yml
     with:
