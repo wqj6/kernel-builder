@@ -92,7 +92,7 @@ jobs:
         working-directory: kernel
         run: |
           # 应用KernelSU
-          curl -LSs https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
+          curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s ${{ matrix.variant.ksu_branch }}
 
           # 配置kprobe
           if ${{ inputs.use_kprobes }}; then
@@ -141,7 +141,7 @@ jobs:
       - name: 获取管理器
         uses: robinraju/release-downloader@v1
         with: 
-          repository: tiann/KernelSU
+          repository: rsuntk/KernelSU
           latest: true
           fileName: '*.apk'
 

@@ -17,7 +17,7 @@ on:
       kernel_patches: { required: false, type: string }
 
 jobs:
-  build-KernelsuNext:
+  KernelsuNext:
     permissions: { contents: write }
     uses: ./.github/workflows/build-KernelsuNext.yml
     with:
@@ -34,7 +34,7 @@ jobs:
       aosp_clang_version: ${{ inputs.aosp_clang_version }}
       aosp_gcc: ${{ inputs.aosp_gcc }}
       kernel_patches: "${{ inputs.kernel_patches }}"
-  build-SukisuUltra:
+  SukisuUltra:
     permissions: { contents: write }
     uses: ./.github/workflows/build-SukisuUltra.yml
     with:
@@ -51,7 +51,7 @@ jobs:
       aosp_clang_version: ${{ inputs.aosp_clang_version }}
       aosp_gcc: ${{ inputs.aosp_gcc }}
       kernel_patches: "${{ inputs.kernel_patches }}"
-  build-RsuntkKernelsu:
+  RsuntkKernelsu:
     permissions: { contents: write }
     uses: ./.github/workflows/build-RsuntkKernelsu.yml
     with:
