@@ -32,11 +32,7 @@ jobs:
     steps:
       - name: 同步仓库
         uses: actions/checkout@v4
-        with:
-          path: self-repo
-          sparse-checkout: |
-            /patches
-            /custom_defconfig
+        with: { path: self-repo }
 
       - name: 安装软件包
         run: sudo apt update && sudo apt install -y binutils-arm-linux-gnueabi binutils-aarch64-linux-gnu
