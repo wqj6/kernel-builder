@@ -31,7 +31,11 @@ jobs:
     steps:
       - name: 同步仓库
         uses: actions/checkout@v4
-        with: { path: self-repo }
+        with:
+          path: self-repo
+          sparse-checkout: |
+            /patches
+            /custom_defconfig
 
       - name: 安装软件包
         run: sudo apt update && sudo apt install -y binutils-arm-linux-gnueabi binutils-aarch64-linux-gnu
@@ -58,7 +62,7 @@ jobs:
       - name: 下载gcc
         if: ${{ inputs.aosp_gcc }}
         run: |
-          mkdir -p aosp-gcc-aarch64 aosp-gcc-arm
+          mkdir -p aosp-gcc-{aarch64,arm}
           curl -LSs https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/heads/android12-release.tar.gz | tar xz -C aosp-gcc-aarch64
           curl -LSs https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/heads/android12-release.tar.gz | tar xz -C aosp-gcc-arm
           echo PATH=$GITHUB_WORKSPACE/aosp-gcc-aarch64/bin:$GITHUB_WORKSPACE/aosp-gcc-arm/bin:$PATH >> $GITHUB_ENV
@@ -74,18 +78,9 @@ jobs:
           cat >anykernel.sh <<EOF
           properties() { ' 
           kernel.string=${{ inputs.kernel_repository }} remote ${{ inputs.kernel_repository_branch }} with ${{ matrix.variant.name }} for ${{ inputs.device_code }}
-          do.devicecheck=1
           device.name1=${{ inputs.device_code }}
           '; }
-
-          block=auto
-          is_slot_device=auto
-          ramdisk_compression=auto
-          patch_vbmeta_flag=auto
-
           . tools/ak3-core.sh
-          split_boot
-          flash_boot
           EOF
 
       - name: 设置KernelSU
@@ -110,8 +105,7 @@ jobs:
           if ${{ matrix.variant.susfs }}; then
             patch -s -p1 -i $GITHUB_WORKSPACE/susfs/kernel_patches/50_add_susfs_in_kernel-${{ inputs.kernel_version }}.patch \
             || patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/susfs-fix-${{ inputs.kernel_version }}.patch
-            cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/
-            cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/
+            cp -r $GITHUB_WORKSPACE/susfs/kernel_patches/{fs,include/linux} .
             echo CONFIG_KSU_SUSFS_SUS_SU=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
           fi
 
@@ -125,11 +119,8 @@ jobs:
           done <<< "${{ inputs.kernel_patches }}"
 
           # 编译
-          MAKE_ARGS="-s O=out ARCH=arm64 -j$(nproc --all) \
-          ${{ inputs.aosp_gcc == true && 'CC=clang CLANG_TRIPLE=aarch64-linux-gnu-' || 'LLVM=1 LLVM_IAS=1' }} \
-          CROSS_COMPILE=aarch64-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}- \
-          CROSS_COMPILE_ARM32=arm-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}eabi-"
-          echo "CONFIG_LOCALVERSION_AUTO=n" >> arch/arm64/configs/${{ inputs.device_defconfig }}
+          MAKE_ARGS="-s O=out ARCH=arm64 -j$(nproc --all) ${{ inputs.aosp_gcc == true && 'CC=clang CLANG_TRIPLE=aarch64-linux-gnu-' || 'LLVM=1 LLVM_IAS=1' }} CROSS_COMPILE=aarch64-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}- CROSS_COMPILE_ARM32=arm-linux-${{ inputs.aosp_gcc == true && 'android' || 'gnu' }}eabi-"
+          echo CONFIG_LOCALVERSION_AUTO=n >> arch/arm64/configs/${{ inputs.device_defconfig }}
           make $MAKE_ARGS ${{ inputs.device_defconfig }}
           make $MAKE_ARGS LOCALVERSION=${{ inputs.kernel_localversion }}
 

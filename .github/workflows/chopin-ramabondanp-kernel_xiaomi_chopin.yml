@@ -1,4 +1,4 @@
-name: 为Redmi Note 10 Pro构建
+name: 为Redmi Note 10 Pro 5G构建
 
 on: workflow_dispatch
 
@@ -12,7 +12,7 @@ jobs:
       kernel_version: 4.14
       kernel_localversion: -g888888888888
       device_code: chopin
-      device_name: Redmi Note 10 Pro
+      device_name: Redmi Note 10 Pro 5G
       device_defconfig: chopin_user_defconfig
       use_kprobes: false
       aosp_clang_branch: android11-release
