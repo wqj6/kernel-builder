@@ -101,7 +101,8 @@ jobs:
           if ${{ matrix.variant.susfs }}; then
             patch -s -p1 -i $GITHUB_WORKSPACE/susfs/kernel_patches/50_add_susfs_in_kernel-${{ inputs.kernel_version }}.patch \
             || patch -s -p1 -i $GITHUB_WORKSPACE/self-repo/patches/susfs-fix-${{ inputs.kernel_version }}.patch
-            cp -r $GITHUB_WORKSPACE/susfs/kernel_patches/{fs,include/linux} .
+            cp -r $GITHUB_WORKSPACE/susfs/kernel_patches/fs .
+            cp -r $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux include
             echo CONFIG_KSU_SUSFS_SUS_SU=y >> arch/arm64/configs/${{ inputs.device_defconfig }}
           fi
 
